@@ -54,6 +54,9 @@ public class Unit {
         this.mines = mines;
         this.weapon = weapon;
     }
+    public Unit clone() {
+        return new Unit(playerId, id, health, getPosition().clone(), size.clone(), getJumpState().clone(), walkedRight, stand, onGround, onLadder, mines, weapon);
+    }
     public static Unit readFrom(java.io.InputStream stream) throws java.io.IOException {
         Unit result = new Unit();
         result.playerId = StreamUtil.readInt(stream);

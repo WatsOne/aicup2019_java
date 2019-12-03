@@ -6,6 +6,7 @@ public class Game {
     private int currentTick;
     public int getCurrentTick() { return currentTick; }
     public void setCurrentTick(int currentTick) { this.currentTick = currentTick; }
+    public void incCurrentTick() { this.currentTick++; }
     private model.Properties properties;
     public model.Properties getProperties() { return properties; }
     public void setProperties(model.Properties properties) { this.properties = properties; }
@@ -37,6 +38,9 @@ public class Game {
         this.bullets = bullets;
         this.mines = mines;
         this.lootBoxes = lootBoxes;
+    }
+    public static Game clone(Game game) {
+        return new Game(game.getCurrentTick(), game.properties, game.getLevel(), game.players, game.units, game.bullets, game.mines, game.lootBoxes);
     }
     public static Game readFrom(java.io.InputStream stream) throws java.io.IOException {
         Game result = new Game();

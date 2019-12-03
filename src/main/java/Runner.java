@@ -7,11 +7,16 @@ import java.util.Map;
 import java.util.HashMap;
 import java.io.BufferedOutputStream;
 
+import model.Game;
+import model.Unit;
 import util.StreamUtil;
 
 public class Runner {
     private final InputStream inputStream;
     private final OutputStream outputStream;
+
+    private Unit simUnit;
+    private Game simGame;
 
     private Runner(String host, int port, String token) throws IOException {
         Socket socket = new Socket(host, port);
@@ -23,7 +28,8 @@ public class Runner {
     }
 
     private void run() throws IOException {
-        MyStrategy myStrategy = new MyStrategy();
+//        MyStrategy myStrategy = new MyStrategy();
+        TestStrategy myStrategy = new TestStrategy();
         Debug debug = new Debug(outputStream);
         while (true) {
             model.ServerMessageGame message = model.ServerMessageGame.readFrom(inputStream);
@@ -34,6 +40,12 @@ public class Runner {
             Map<Integer, model.UnitAction> actions = new HashMap<>();
             for (model.Unit unit : playerView.getGame().getUnits()) {
                 if (unit.getPlayerId() == playerView.getMyId()) {
+                    if (simUnit == null) {
+                        simUnit = unit.clone();
+                        simGame = Game.clone(playerView.getGame());
+                    }
+
+                    myStrategy.simulate(simUnit, simGame, debug);
                     actions.put(unit.getId(), myStrategy.getAction(unit, playerView.getGame(), debug));
                 }
             }

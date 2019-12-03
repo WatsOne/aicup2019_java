@@ -6,13 +6,18 @@ public class Vec2Double {
     private double x;
     public double getX() { return x; }
     public void setX(double x) { this.x = x; }
+    public void incX(double x) { this.x += x; }
     private double y;
     public double getY() { return y; }
     public void setY(double y) { this.y = y; }
+    public void incY(double y) { this.y += y; }
     public Vec2Double() {}
     public Vec2Double(double x, double y) {
         this.x = x;
         this.y = y;
+    }
+    public Vec2Double clone() {
+        return new Vec2Double(x, y);
     }
     public static Vec2Double readFrom(java.io.InputStream stream) throws java.io.IOException {
         Vec2Double result = new Vec2Double();

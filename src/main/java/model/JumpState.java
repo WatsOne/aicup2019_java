@@ -12,6 +12,7 @@ public class JumpState {
     private double maxTime;
     public double getMaxTime() { return maxTime; }
     public void setMaxTime(double maxTime) { this.maxTime = maxTime; }
+    public void decMaxTime(double maxTime) { this.maxTime -= maxTime; }
     private boolean canCancel;
     public boolean isCanCancel() { return canCancel; }
     public void setCanCancel(boolean canCancel) { this.canCancel = canCancel; }
@@ -21,6 +22,9 @@ public class JumpState {
         this.speed = speed;
         this.maxTime = maxTime;
         this.canCancel = canCancel;
+    }
+    public JumpState clone() {
+        return new JumpState(canJump, speed, maxTime, canCancel);
     }
     public static JumpState readFrom(java.io.InputStream stream) throws java.io.IOException {
         JumpState result = new JumpState();
