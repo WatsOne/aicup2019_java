@@ -48,4 +48,8 @@ public class Level {
             }
         }
     }
+
+    public boolean isGround(int x, int y) {
+        return tiles[x][y] == Tile.WALL;
+    }
 }
