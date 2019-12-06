@@ -82,11 +82,19 @@ public class PathFinder {
         firstNode.setPz((byte) 0);
         firstNode.setStatus(mOpenNodeValue);
 
-        if (mMap.isGround(start.getX(), start.getY() - 1))
-            firstNode.setJumpLength((short) 0);
+        boolean startsOnGround = false;
+        for (int x = start.getX(); x < start.getX() + characterWidth; ++x)
+        {
+            if (mMap.isGround(x, start.getY() - 1))
+            {
+                startsOnGround = true;
+                break;
+            }
+        }
+        if (startsOnGround)
+            firstNode.setJumpLength((short)0);
         else
             firstNode.setJumpLength((short)(maxCharacterJumpHeight * 2));
-
         nodes[mLocation.getXy()].add(firstNode);
         touchedLocations.push(mLocation.getXy());
 
@@ -123,6 +131,10 @@ public class PathFinder {
                 if (mGrid[mNewLocationX][mNewLocationY] == 0)
                     continue;
 
+                if (!mMap.isGround(mLocationX, mLocationY - 1) && mLocationY == mNewLocationY) {
+                    continue;
+                }
+
                 if (mMap.isGround(mNewLocationX, mNewLocationY - 1))
                     onGround = true;
                 else if (mGrid[mNewLocationX][mNewLocationY + characterHeight] == 0)
@@ -136,10 +148,11 @@ public class PathFinder {
                         newJumpLength = (short) Math.max(maxCharacterJumpHeight * 2 + 1, jumpLength + 1);
                     else
                         newJumpLength = (short) Math.max(maxCharacterJumpHeight * 2, jumpLength + 2);
-                } else if (onGround)
+                } else if (onGround) {
                     newJumpLength = 0;
+                }
                 else if (mNewLocationY > mLocationY) {
-                    if (jumpLength < 2) //first jump is always two block up instead of one up and optionally one to either right or left
+                    if (jumpLength < 2 && maxCharacterJumpHeight > 2) //first jump is always two block up instead of one up and optionally one to either right or left
                         newJumpLength = 3;
                     else  if (jumpLength % 2 == 0)
                         newJumpLength = (short)(jumpLength + 2);
@@ -156,26 +169,31 @@ public class PathFinder {
                 if (jumpLength >= 0 && jumpLength % 2 != 0 && mLocationX != mNewLocationX)
                     continue;
 
-                if (jumpLength >= maxCharacterJumpHeight * 2 && mNewLocationY > mLocationY)
+                if ((newJumpLength == 0 && mNewLocationX != mLocationX && jumpLength + 1 >= maxCharacterJumpHeight * 2 + 6 && (jumpLength + 1 - (maxCharacterJumpHeight * 2 + 6)) % 8 <= 1)
+                        || (newJumpLength >= maxCharacterJumpHeight * 2 + 6 && mNewLocationX != mLocationX && (newJumpLength - (maxCharacterJumpHeight * 2 + 6)) % 8 != 7))
                     continue;
 
-                if (newJumpLength >= maxCharacterJumpHeight * 2 + 6 && mNewLocationX != mLocationX && (newJumpLength - (maxCharacterJumpHeight * 2 + 6)) % 8 != 3)
+                if (jumpLength >= maxCharacterJumpHeight * 2 && mNewLocationY > mLocationY)
                     continue;
 
                 mNewG = nodes[mLocation.getXy()].get(mLocation.getZ()).getG() + mGrid[mNewLocationX][mNewLocationY] + newJumpLength / 4;
 
                 if (nodes[mNewLocation].size() > 0) {
                     int lowestJump = Short.MAX_VALUE;
+                    int lowestG = Short.MAX_VALUE;
                     boolean couldMoveSideways = false;
                     for (int j = 0; j < nodes[mNewLocation].size(); ++j) {
                         if (nodes[mNewLocation].get(j).getJumpLength() < lowestJump)
                             lowestJump = nodes[mNewLocation].get(j).getJumpLength();
 
+                        if (nodes[mNewLocation].get(j).getG() < lowestG)
+                            lowestG = nodes[mNewLocation].get(j).getG();
+
                         if (nodes[mNewLocation].get(j).getJumpLength() % 2 == 0 && nodes[mNewLocation].get(j).getJumpLength() < maxCharacterJumpHeight * 2 + 6)
                             couldMoveSideways = true;
                     }
 
-                    if (lowestJump <= newJumpLength && (newJumpLength % 2 != 0 || newJumpLength >= maxCharacterJumpHeight * 2 + 6 || couldMoveSideways))
+                    if (lowestG <= mNewG && lowestJump <= newJumpLength && (newJumpLength % 2 != 0 || newJumpLength >= maxCharacterJumpHeight * 2 + 6 || couldMoveSideways))
                         continue;
                 }
 
@@ -215,6 +233,7 @@ public class PathFinder {
             int loc = (fNodeTmp.getPy() * mGridX) + fNodeTmp.getPx();
 
             while (fNode.getX() != fNodeTmp.getPx() || fNode.getY() != fNodeTmp.getPy()) {
+//                System.out.println(">>> " + fNodeTmp.getPx() + " : " + fNodeTmp.getPy());
                 PathFinderNodeFast fNextNodeTmp = nodes[loc].get(fNodeTmp.getPz());
 
                 if ((mClose.size() == 0)
