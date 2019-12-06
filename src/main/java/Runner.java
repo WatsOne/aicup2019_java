@@ -49,6 +49,9 @@ public class Runner {
                     actions.put(unit.getId(), myStrategy.getAction(unit, playerView.getGame(), debug));
                 }
             }
+
+            myStrategy.pathFind(playerView.getGame(), debug);
+
             new model.PlayerMessageGame.ActionMessage(new model.Versioned(actions)).writeTo(outputStream);
             outputStream.flush();
         }

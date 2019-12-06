@@ -1,16 +1,10 @@
 package path;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Stack;
-import java.util.Vector;
-import model.Game;
 import model.Level;
-import model.Vec2Float;
 
 public class PathFinder {
     private byte[][] mGrid;
@@ -22,8 +16,6 @@ public class PathFinder {
 
     private short mGridX;
     private short mGridY;
-    private short mGridXMinus1;
-    private short mGridXLog2;
     private ArrayList<Vector2i> mClose;
 
     private boolean mFound;
@@ -52,8 +44,6 @@ public class PathFinder {
 
         mGridX = (short) grid.length;
         mGridY = (short) grid[0].length;
-        mGridXMinus1 = (short) (mGridX - 1);
-        mGridXLog2 = log2(mGridX);
 
         nodes = new ArrayList[mGridX * mGridY];
         touchedLocations = new Stack<>();
@@ -81,8 +71,8 @@ public class PathFinder {
         mCloseNodeValue += 2;
         mOpen.clear();
 
-        mLocation = new Location((start.getY() << mGridXLog2) + start.getX(), 0);
-        mEndLocation = (end.getY() << mGridXLog2) + end.getX();
+        mLocation = new Location((start.getY() * mGridX) + start.getX(), 0);
+        mEndLocation = (end.getY() * mGridX) + end.getX();
 
         PathFinderNodeFast firstNode = new PathFinderNodeFast();
         firstNode.setG(0);
@@ -107,8 +97,8 @@ public class PathFinder {
             if (nodes[mLocation.getXy()].get(mLocation.getZ()).getStatus() == mCloseNodeValue)
                 continue;
 
-            mLocationX = (short) (mLocation.getXy() & mGridXMinus1);
-            mLocationY = (short) (mLocation.getXy() >> mGridXLog2);
+            mLocationX = (short) (mLocation.getXy() % mGridX);
+            mLocationY = (short) (mLocation.getXy() / mGridX);
 
             if (mLocation.getXy() == mEndLocation) {
                 nodes[mLocation.getXy()].get(mLocation.getZ()).setStatus(mCloseNodeValue);
@@ -121,12 +111,11 @@ public class PathFinder {
                 return null;
             }
 
-            System.out.println(">> " + mLocationX + " : " + mLocationY);
             for (int i = 0; i < 8; i++) {
                 mNewLocationX = (short) (mLocationX + mDirection[i][0]);
                 mNewLocationY = (short) (mLocationY + mDirection[i][1]);
 
-                mNewLocation  = (mNewLocationY << mGridXLog2) + mNewLocationX;
+                mNewLocation  = (mNewLocationY * mGridX) + mNewLocationX;
 
                 boolean onGround = false;
                 boolean atCeiling = false;
@@ -223,7 +212,7 @@ public class PathFinder {
             Vector2i fNode = end;
             Vector2i fPrevNode = end;
 
-            int loc = (fNodeTmp.getPy() << mGridXLog2) + fNodeTmp.getPx();
+            int loc = (fNodeTmp.getPy() * mGridX) + fNodeTmp.getPx();
 
             while (fNode.getX() != fNodeTmp.getPx() || fNode.getY() != fNodeTmp.getPy()) {
                 PathFinderNodeFast fNextNodeTmp = nodes[loc].get(fNodeTmp.getPz());
@@ -242,7 +231,7 @@ public class PathFinder {
                 posY = fNodeTmp.getPy();
                 fPrevNodeTmp = fNodeTmp;
                 fNodeTmp = fNextNodeTmp;
-                loc = (fNodeTmp.getPy() << mGridXLog2) + fNodeTmp.getPx();
+                loc = (fNodeTmp.getPy() * mGridX) + fNodeTmp.getPx();
                 fNode = new Vector2i(posX, posY);
             }
 
@@ -255,9 +244,5 @@ public class PathFinder {
 
         mStopped = true;
         return null;
-    }
-
-    private static short log2(short x) {
-        return (short) (Math.log(x) / Math.log(2));
     }
 }
