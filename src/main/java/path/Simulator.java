@@ -1,3 +1,6 @@
+package path;
+
+import debug.Debug;
 import model.ColorFloat;
 import model.CustomData.Line;
 import model.Game;
@@ -11,13 +14,16 @@ public class Simulator {
     private final double yDeltaTime = 1.0 / 60;
 
     private Unit simPlayer;
-    private Game simGame;
+    //private Game simGame;
     private Tile[][] tiles;
 
-    public void reset(Unit unit, Game game) {
-        simPlayer = unit.clone();
-        simGame = Game.clone(game);
+    public Simulator(Game game) {
         tiles = game.getLevel().getTiles();
+    }
+
+    public void reset(Unit unit) {
+        simPlayer = unit.clone();
+        //simGame = Game.clone(game);
     }
 
     public void tick(UnitAction action, Debug debug, boolean draw) {
@@ -52,11 +58,12 @@ public class Simulator {
         int yIntDown = (int)(y - yDeltaPath);
         boolean onGround = tiles[(int)(x + 0.45)][yIntDown] != Tile.EMPTY || tiles[(int)(x - 0.45)][yIntDown] != Tile.EMPTY;
 
-        if (action.isJump() && onGround || simPlayer.getJumpState().getMaxTime() > 0) {
+        if (onGround) {
+            simPlayer.getJumpState().setMaxTime(0.55);
+        }
+
+        if (action.isJump() && (onGround || simPlayer.getJumpState().getMaxTime() > 0)) {
             //летим вверх
-            if (simPlayer.getJumpState().getMaxTime() == 0) {
-                simPlayer.getJumpState().setMaxTime(0.55);
-            }
             int yInt = (int)(y + 1.8 + yDeltaPath);
             if (tiles[(int)(x + 0.45)][yInt] == Tile.WALL || tiles[(int)(x - 0.45)][yInt] == Tile.WALL) {
                 simPlayer.getPosition().setY(yInt - 1.8);
@@ -83,14 +90,14 @@ public class Simulator {
                     new ColorFloat(1.0f, 0.0f, 0.0f, 1.0f)));
         }
 
-        simGame.incCurrentTick();
+        //simGame.incCurrentTick();
     }
 
     public Unit getSimPlayer() {
         return simPlayer;
     }
 
-    public Game getSimGame() {
-        return simGame;
-    }
+//    public Game getSimGame() {
+//        return simGame;
+//    }
 }
