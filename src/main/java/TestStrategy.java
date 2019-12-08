@@ -23,6 +23,7 @@ public class TestStrategy {
     List<Vector2i> currentPathTest;
     PathFinder pathFinderTest;
     Mover moverTest;
+    boolean skipJump = false;
 
     public void simulate(Unit unit, Game game, Debug debug) {
 //        simulator.reset(unit, game);
@@ -48,7 +49,7 @@ public class TestStrategy {
     }
 
     private List<Vector2i> pathFind() {
-        return pathFinder.find(new Vector2i(37, 1), new Vector2i(20, 1), 1, 1, (short) 5);
+        return pathFinder.find(new Vector2i(37, 1), new Vector2i(37, 15), 1, 1, (short) 5);
     }
 
     private void init(Game game) {
@@ -88,7 +89,18 @@ public class TestStrategy {
         UnitAction action = new UnitAction();
         action.setAim(new Vec2Double(10,10));
         mover.move(unit, action);
-//        System.out.println(">>> tick: " + game.getCurrentTick() + ": " + action.isJump() + " : " + action.getVelocity());
+
+        if (action.isJump() && game.getCurrentTick() == 0) {
+            action.setVelocity(0.0);
+            skipJump = true;
+        }
+
+        if (skipJump) {
+            action.setVelocity(0.0);
+            action.setJump(false);
+            skipJump = false;
+        }
+
         return action;
     }
 }

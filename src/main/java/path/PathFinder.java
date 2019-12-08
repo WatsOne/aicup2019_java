@@ -239,6 +239,8 @@ public class PathFinder {
                 if ((mClose.size() == 0)
                     || (mMap.isPlatform(fNode.getX(), fNode.getY() - 1))
                     || (mGrid[fNode.getX()][fNode.getY() - 1] == 0 && mMap.isPlatform(fPrevNode.getX(), fPrevNode.getY() - 1))
+                        || (mMap.isLadder(fNode.getX(), fNode.getY()))
+                        || (mGrid[fNode.getX()][fNode.getY()] == 0 && mMap.isLadder(fPrevNode.getX(), fPrevNode.getY()))
                     || (fNextNodeTmp.getJumpLength() != 0 && fNodeTmp.getJumpLength() == 0)                                                                                                       //mark jumps starts
                     || (fNodeTmp.getJumpLength() == 0 && fPrevNodeTmp.getJumpLength() != 0)                                                                                                       //mark landings
                     || (fNode.getY() > mClose.get(mClose.size() - 1).getY() && fNode.getY() > fNodeTmp.getPy())

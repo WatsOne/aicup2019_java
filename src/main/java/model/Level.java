@@ -50,10 +50,14 @@ public class Level {
     }
 
     public boolean isGround(int x, int y) {
-        return tiles[x][y] == Tile.WALL || tiles[x][y] == Tile.PLATFORM;
+        return tiles[x][y] == Tile.WALL || tiles[x][y] == Tile.PLATFORM || tiles[x][y] == Tile.LADDER;
     }
 
     public boolean isPlatform(int x, int y) {
         return tiles[x][y] == Tile.PLATFORM;
+    }
+
+    public boolean isLadder(int x, int y) {
+        return tiles[x][y] == Tile.LADDER;
     }
 }
