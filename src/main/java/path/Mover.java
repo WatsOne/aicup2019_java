@@ -28,7 +28,6 @@ public class Mover {
         double deltaY = target.getY() - unit.getPosition().getY();
 
         if (reached(unit)) {
-            System.out.println(">>>> reach");
             Vector2i currentReached = path.get(mCurrentNodeId);
             boolean onPlatform = game.getLevel().isPlatform(currentReached.getX(), currentReached.getY() - 1);
             if (onPlatform) {
@@ -91,6 +90,11 @@ public class Mover {
     private boolean reached(Unit unit) {
         Vector2i target = path.get(mCurrentNodeId);
         boolean reachX = Math.abs(unit.getPosition().getX() - 0.45 - target.getX()) < 0.1;
+
+        if (game.getLevel().isLadderFake(target.getX(), target.getY())) {
+            return reachX && reachYExtended(unit);
+        }
+
         if (game.getLevel().isGround(target.getX(), target.getY())) {
             return reachX && reachY(unit);
         } else {
@@ -107,6 +111,11 @@ public class Mover {
     private boolean reachYSim(Unit unit) {
         Vector2i target = path.get(mCurrentNodeId);
         return Math.abs(unit.getPosition().getY() - target.getY()) < 0.1;
+    }
+
+    private boolean reachYExtended(Unit unit) {
+        Vector2i target = path.get(mCurrentNodeId);
+        return Math.abs(unit.getPosition().getY() - target.getY()) < 0.2;
     }
 
     private boolean reachX(Unit unit) {

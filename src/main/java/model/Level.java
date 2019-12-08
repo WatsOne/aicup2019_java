@@ -1,9 +1,13 @@
 package model;
 
+import java.util.ArrayList;
+import java.util.List;
+import path.Vector2i;
 import util.StreamUtil;
 
 public class Level {
     private model.Tile[][] tiles;
+    public List<Vector2i> pads = new ArrayList<>();
     public model.Tile[][] getTiles() { return tiles; }
     public void setTiles(model.Tile[][] tiles) { this.tiles = tiles; }
     public Level() {}
@@ -31,12 +35,26 @@ public class Level {
                     break;
                 case 4:
                     result.tiles[i][j] = model.Tile.JUMP_PAD;
+                    result.pads.add(new Vector2i(i,j));
                     break;
                 default:
                     throw new java.io.IOException("Unexpected discriminant value");
                 }
             }
         }
+
+        result.pads.forEach(p -> {
+            int i = 0;
+            boolean wall = false;
+            while (!wall || i <= 10) {
+                result.tiles[p.getX()][p.getY() + i] = Tile.LADDER_FAKE;
+                i++;
+                if (result.tiles[p.getX()][p.getY() + i] == Tile.WALL) {
+                    wall = true;
+                }
+            }
+        });
+
         return result;
     }
     public void writeTo(java.io.OutputStream stream) throws java.io.IOException {
@@ -50,7 +68,7 @@ public class Level {
     }
 
     public boolean isGround(int x, int y) {
-        return tiles[x][y] == Tile.WALL || tiles[x][y] == Tile.PLATFORM || tiles[x][y] == Tile.LADDER;
+        return tiles[x][y] == Tile.WALL || tiles[x][y] == Tile.PLATFORM || tiles[x][y] == Tile.LADDER || tiles[x][y] == Tile.LADDER_FAKE;
     }
 
     public boolean isPlatform(int x, int y) {
@@ -58,6 +76,10 @@ public class Level {
     }
 
     public boolean isLadder(int x, int y) {
-        return tiles[x][y] == Tile.LADDER;
+        return tiles[x][y] == Tile.LADDER || tiles[x][y] == Tile.LADDER_FAKE;
+    }
+
+    public boolean isLadderFake(int x, int y) {
+        return tiles[x][y] == Tile.LADDER_FAKE;
     }
 }
