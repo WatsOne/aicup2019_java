@@ -22,6 +22,11 @@ public class Mover {
     }
 
     public void move(Unit unit, UnitAction action) {
+        if (mCurrentNodeId == path.size()) {
+            action.setVelocity(0.0);
+            return;
+        }
+
         boolean resetJump = false;
 
         Vector2i target = path.get(mCurrentNodeId);
@@ -29,13 +34,29 @@ public class Mover {
 
         if (reached(unit)) {
             Vector2i currentReached = path.get(mCurrentNodeId);
+            Vector2i prevReached = path.get(mCurrentNodeId - 1);
             boolean onPlatform = game.getLevel().isPlatform(currentReached.getX(), currentReached.getY() - 1);
-            if (onPlatform) {
+
+            boolean onFakeLadder = game.getLevel().isLadderFake(currentReached.getX(), currentReached.getY() - 1);
+            boolean onFakeLadderPrev = game.getLevel().isLadderFake(prevReached.getX(), prevReached.getY() - 1);
+            boolean resetForPad = onFakeLadder && !onFakeLadderPrev;
+
+            if (onPlatform || resetForPad) {
                 resetJump = true;
+            }
+
+            if (resetForPad) {
+                path.add(mCurrentNodeId, new Vector2i(target.getX(), target.getY() - 1));
+                path.add(mCurrentNodeId + 1, new Vector2i(target.getX(), target.getY()));
             }
 
             mCurrentNodeId++;
             currentSpeed = null;
+
+            if (mCurrentNodeId == path.size()) {
+                action.setVelocity(0.0);
+                return;
+            }
 
             target = path.get(mCurrentNodeId);
             deltaY = target.getY() - unit.getPosition().getY();
