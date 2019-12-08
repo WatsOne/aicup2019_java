@@ -48,7 +48,7 @@ public class TestStrategy {
     }
 
     private List<Vector2i> pathFind() {
-        return pathFinder.find(new Vector2i(37, 1), new Vector2i(33, 11), 1, 1, (short) 5);
+        return pathFinder.find(new Vector2i(37, 1), new Vector2i(20, 1), 1, 1, (short) 5);
     }
 
     private void init(Game game) {
@@ -76,6 +76,7 @@ public class TestStrategy {
     }
 
     public UnitAction getAction(Unit unit, Game game, Debug debug) {
+        System.out.println(">>> tick: " + game.getCurrentTick());
         if (game.getCurrentTick() == 0) {
             init(game);
         }

@@ -11,40 +11,73 @@ public class Mover {
     private int mCurrentNodeId;
     private Double currentSpeed;
     private Simulator simulator;
+    private Game game;
 
     public Mover(List<Vector2i> path, Game game) {
         this.path = path;
         Collections.reverse(path);
         mCurrentNodeId = 1;
         simulator = new Simulator(game);
+        this.game = game;
     }
 
     public void move(Unit unit, UnitAction action) {
-        if (reached(unit)) {
-            mCurrentNodeId++;
-            currentSpeed = null;
-        }
+        boolean resetJump = false;
+        boolean down = false;
+
         Vector2i target = path.get(mCurrentNodeId);
         double deltaY = target.getY() - unit.getPosition().getY();
+
+        if (reached(unit)) {
+            Vector2i currentReached = path.get(mCurrentNodeId);
+            boolean onPlatform = game.getLevel().isPlatform(currentReached.getX(), currentReached.getY() - 1);
+            if (onPlatform) {
+                resetJump = true;
+            }
+
+            mCurrentNodeId++;
+            currentSpeed = null;
+
+            target = path.get(mCurrentNodeId);
+            deltaY = target.getY() - unit.getPosition().getY();
+
+            if (deltaY < 0) {
+                down = true;
+            }
+        }
+
         if (currentSpeed == null) {
             currentSpeed = getSpeed(deltaY, target, unit);
 
-            if (!reachY(unit)) {
+            if (!reachYSim(unit) && deltaY > 0) {
                 simulator.reset(unit);
                 action.setVelocity(currentSpeed);
-                while (!reachY(simulator.getSimPlayer())) {
+                while (!reachYSim(simulator.getSimPlayer())) {
                     double deltaSimY = target.getY() - simulator.getSimPlayer().getPosition().getY();
                     action.setJump(getJump(simulator.getSimPlayer(), deltaSimY));
                     simulator.tick(action, null, false);
                 }
                 double deltaSimX = target.getX() - (simulator.getSimPlayer().getPosition().getX() - 0.45);
-                if (Math.abs(deltaSimX) > 0.05) {
+                if (Math.abs(deltaSimX) > 0.1) {
                     currentSpeed = currentSpeed < 0 ? -10.0 : 10.0;
                 }
             }
         }
-        action.setVelocity(reachX(unit) ? 0.0 : currentSpeed);
-        action.setJump(getJump(unit, deltaY));
+
+        boolean reachX = reachX(unit);
+
+        action.setVelocity(reachX ? 0.0 : currentSpeed);
+        if (resetJump) {
+            action.setJump(false);
+        } else {
+            action.setJump(getJump(unit, deltaY));
+        }
+
+        if (down) {
+            action.setJumpDown(true);
+        } else {
+            action.setJumpDown(reachX && deltaY < 0);
+        }
     }
 
     private double getSpeed(double deltaY, Vector2i target, Unit unit) {
@@ -57,7 +90,7 @@ public class Mover {
     }
 
     private boolean getJump(Unit unit, double deltaY) {
-        return !reachY(unit) && deltaY > 0;
+        return !reachYSim(unit) && deltaY > 0;
     }
 
     private boolean reached(Unit unit) {
@@ -66,6 +99,12 @@ public class Mover {
     }
 
     private boolean reachY(Unit unit) {
+        Vector2i target = path.get(mCurrentNodeId);
+        double deltaY = unit.getPosition().getY() - target.getY();
+        return deltaY >= 0.0 && deltaY < 0.05;
+    }
+
+    private boolean reachYSim(Unit unit) {
         Vector2i target = path.get(mCurrentNodeId);
         return Math.abs(unit.getPosition().getY() - target.getY()) < 0.1;
     }
