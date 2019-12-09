@@ -1,6 +1,7 @@
 package path;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import model.Game;
 import model.Unit;
@@ -19,6 +20,18 @@ public class Mover {
         mCurrentNodeId = 1;
         simulator = new Simulator(game);
         this.game = game;
+        filterPathForPads();
+    }
+
+    private void filterPathForPads() {
+        for (Vector2i p : path) {
+            if (game.getLevel().isLadderFake(p.getX() + 1, p.getY())) {
+                p.setX(p.getX() + 1);
+            }
+            if (game.getLevel().isLadderFake(p.getX() - 1, p.getY())) {
+                p.setX(p.getX() - 1);
+            }
+        }
     }
 
     public void move(Unit unit, UnitAction action) {
@@ -37,17 +50,20 @@ public class Mover {
             Vector2i prevReached = path.get(mCurrentNodeId - 1);
             boolean onPlatform = game.getLevel().isPlatform(currentReached.getX(), currentReached.getY() - 1);
 
-            boolean onFakeLadder = game.getLevel().isLadderFake(currentReached.getX(), currentReached.getY() - 1);
-            boolean onFakeLadderPrev = game.getLevel().isLadderFake(prevReached.getX(), prevReached.getY() - 1);
+            boolean onFakeLadder = game.getLevel().isLadderFake(currentReached.getX(), currentReached.getY());
+            boolean onFakeLadderPrev = game.getLevel().isLadderFake(prevReached.getX(), prevReached.getY());
             boolean resetForPad = onFakeLadder && !onFakeLadderPrev;
 
             if (onPlatform || resetForPad) {
                 resetJump = true;
             }
-
             if (resetForPad) {
-                path.add(mCurrentNodeId, new Vector2i(target.getX(), target.getY() - 1));
-                path.add(mCurrentNodeId + 1, new Vector2i(target.getX(), target.getY()));
+                if (game.getLevel().isPad(target.getX(), target.getY() - 1)) {
+                    path.add(mCurrentNodeId + 1, new Vector2i(target.getX(), target.getY()));
+                } else {
+                    path.add(mCurrentNodeId, new Vector2i(target.getX(), target.getY() - 1));
+                    path.add(mCurrentNodeId + 1, new Vector2i(target.getX(), target.getY()));
+                }
             }
 
             mCurrentNodeId++;

@@ -44,9 +44,9 @@ public class Level {
         }
 
         result.pads.forEach(p -> {
-            int i = 0;
+            int i = 1;
             boolean wall = false;
-            while (!wall || i <= 10) {
+            while (!wall && i <= 10) {
                 result.tiles[p.getX()][p.getY() + i] = Tile.LADDER_FAKE;
                 i++;
                 if (result.tiles[p.getX()][p.getY() + i] == Tile.WALL) {
@@ -73,6 +73,10 @@ public class Level {
 
     public boolean isPlatform(int x, int y) {
         return tiles[x][y] == Tile.PLATFORM;
+    }
+
+    public boolean isPad(int x, int y) {
+        return tiles[x][y] == Tile.JUMP_PAD;
     }
 
     public boolean isLadder(int x, int y) {

@@ -58,7 +58,7 @@ public class TestStrategy {
 
     private void init(Unit unit, Game game, Debug debug) {
         pathFinder = new PathFinder(initGrid(game), game.getLevel());
-        currentPath = pathFind(unit, getNearestLoot(unit, game, Item.Weapon.class));
+        currentPath = pathFind(unit, new Vector2i(19,27));//getNearestLoot(unit, game, Item.Weapon.class));
         simulator = new Simulator(game);
         mover = new Mover(currentPath, game);
         areaSearcher.init(unit, game);
@@ -66,13 +66,13 @@ public class TestStrategy {
     }
 
     public UnitAction getAction(Unit unit, Game game, Debug debug) {
-//        System.out.println(">>> tick: " + game.getCurrentTick());
-        Unit enemy = unit;
-        for (Unit u : game.getUnits()) {
-            if (u.getId() != unit.getId()) {
-                enemy = u;
-            }
-        }
+        System.out.println(">>> tick: " + game.getCurrentTick());
+//        Unit enemy = unit;
+//        for (Unit u : game.getUnits()) {
+//            if (u.getId() != unit.getId()) {
+//                enemy = u;
+//            }
+//        }
 
         if (game.getCurrentTick() == 0) {
             init(unit, game, debug);

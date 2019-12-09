@@ -3,7 +3,7 @@ package path;
 import java.util.Objects;
 
 public class Vector2i {
-    private final int x;
+    private int x;
     private final int y;
 
     public Vector2i(int x, int y) {
@@ -17,6 +17,10 @@ public class Vector2i {
 
     public int getY() {
         return y;
+    }
+
+    public void setX(int x) {
+        this.x = x;
     }
 
     @Override
