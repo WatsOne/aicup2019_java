@@ -1,3 +1,3 @@
 public enum State {
-    WEAPON, MOVE, HEALTH;
+    WEAPON, MOVE, HEALTH, NOTHING;
 }

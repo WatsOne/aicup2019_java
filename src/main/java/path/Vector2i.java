@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class Vector2i {
     private int x;
-    private final int y;
+    private int y;
 
     public Vector2i(int x, int y) {
         this.x = x;
@@ -21,6 +21,10 @@ public class Vector2i {
 
     public void setX(int x) {
         this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
     }
 
     @Override

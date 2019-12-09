@@ -28,6 +28,7 @@ public class TestStrategy {
     AreaSearcher areaSearcher = new AreaSearcher();
 
     boolean skipJump = false;
+    boolean healthExist = true;
 
     public void simulate(Unit unit, Game game, Debug debug) {
 //        simulator.reset(unit, game);
@@ -58,7 +59,7 @@ public class TestStrategy {
 
     private void init(Unit unit, Game game, Debug debug) {
         pathFinder = new PathFinder(initGrid(game), game.getLevel());
-        currentPath = pathFind(unit, new Vector2i(19,27));//getNearestLoot(unit, game, Item.Weapon.class));
+        currentPath = pathFind(unit, getNearestLoot(unit, game, Item.Weapon.class));
         simulator = new Simulator(game);
         mover = new Mover(currentPath, game);
         areaSearcher.init(unit, game);
@@ -66,30 +67,30 @@ public class TestStrategy {
     }
 
     public UnitAction getAction(Unit unit, Game game, Debug debug) {
-        System.out.println(">>> tick: " + game.getCurrentTick());
-//        Unit enemy = unit;
-//        for (Unit u : game.getUnits()) {
-//            if (u.getId() != unit.getId()) {
-//                enemy = u;
-//            }
-//        }
+        Unit enemy = unit;
+        for (Unit u : game.getUnits()) {
+            if (u.getId() != unit.getId()) {
+                enemy = u;
+            }
+        }
 
         if (game.getCurrentTick() == 0) {
             init(unit, game, debug);
+            state = State.WEAPON;
         }
 
-        if (unit.getHealth() < 60 && state != State.HEALTH) {
-            state = State.HEALTH;
-            currentPath = pathFind(unit, getNearestLoot(unit, game, Item.HealthPack.class));
+        if (game.getCurrentTick() > 0 && game.getCurrentTick() % 50 == 0 && state == State.MOVE) {
+            state = State.NOTHING;
         }
-
-        for (Vector2i vec : currentPath) {
-            debug.draw(new CustomData.Rect(new Vec2Float((float) vec.getX(), (float) vec.getY()), new Vec2Float(1f, 1f), new ColorFloat(0f, 1f, 0f, 0.5f)));
-        }
+        updatePath(unit, game, enemy);
 
         UnitAction action = new UnitAction();
-        action.setAim(new Vec2Double(10,10));
-        mover.move(unit, action);
+
+        if (mover.move(unit, action)) {
+            state = State.NOTHING;
+            updatePath(unit, game, enemy);
+            mover.move(unit, action);
+        }
 
         if (action.isJump() && game.getCurrentTick() == 0) {
             action.setVelocity(0.0);
@@ -102,7 +103,35 @@ public class TestStrategy {
             skipJump = false;
         }
 
+        Vec2Double aim = new Vec2Double(enemy.getPosition().getX() - unit.getPosition().getX(), enemy.getPosition().getY() - unit.getPosition().getY());
+        action.setAim(aim);
+
+        for (Vector2i vec : currentPath) {
+            debug.draw(new CustomData.Rect(new Vec2Float((float) vec.getX(), (float) vec.getY()), new Vec2Float(1f, 1f), new ColorFloat(0f, 1f, 0f, 0.5f)));
+        }
+
+        action.setShoot(iSeeEnemy(enemy, unit, game));
         return action;
+    }
+
+    private void updatePath(Unit unit, Game game, Unit enemy) {
+        if (unit.getHealth() < 60 && state != State.HEALTH && healthExist) {
+            state = State.HEALTH;
+            Vector2i h = getNearestLoot(unit, game, Item.HealthPack.class);
+            if (h != null) {
+                currentPath = pathFind(unit, h);
+                mover = new Mover(currentPath, game);
+            } else {
+                state = State.NOTHING;
+                healthExist = false;
+            }
+        }
+
+        if (state != State.HEALTH && state != State.WEAPON && state != State.MOVE) {
+            currentPath = pathFind(unit, getNearestPosForShooting(game, enemy, areaSearcher));
+            mover = new Mover(currentPath, game);
+            state = State.MOVE;
+        }
     }
 
     private Vector2i getNearestLoot(Unit unit, Game game, Class<? extends Item> loot) {
@@ -129,18 +158,22 @@ public class TestStrategy {
         double enemyY = enemy.getPosition().getY();
 
         Vector2i result = null;
-        double minDistance = 9999;
+        double max = 0;
 
         for (Vector2i a : areaSearcher.getAreas()) {
             if (LineTracer.canTrace(game, a.getX(), a.getY(), (int) enemyX, (int) enemyY) || LineTracer.canTrace(game, a.getX(), a.getY(), (int) enemyX, (int) (enemyY + 2))) {
                 double distance = Math.abs(a.getX() - enemyX) + Math.abs(a.getY() - enemyY);
-                if (distance < minDistance) {
+                if (distance > max) {
                     result = a;
-                    minDistance = distance;
+                    max = distance;
                 }
             }
         }
 
         return result;
+    }
+
+    private boolean iSeeEnemy(Unit enemy, Unit unit, Game game) {
+        return LineTracer.canTrace(game, (int)unit.getPosition().getX(), (int)(unit.getPosition().getY()+0.9), (int) enemy.getPosition().getX(), (int) enemy.getPosition().getY()) || LineTracer.canTrace(game, (int)unit.getPosition().getX(), (int)(unit.getPosition().getY()+0.9), (int) enemy.getPosition().getX(), (int) (enemy.getPosition().getY() + 2));
     }
 }

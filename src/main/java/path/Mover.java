@@ -31,13 +31,16 @@ public class Mover {
             if (game.getLevel().isLadderFake(p.getX() - 1, p.getY())) {
                 p.setX(p.getX() - 1);
             }
+            if (game.getLevel().isPad(p.getX(), p.getY())) {
+                p.setY(p.getY() + 1);
+            }
         }
     }
 
-    public void move(Unit unit, UnitAction action) {
+    public boolean move(Unit unit, UnitAction action) {
         if (mCurrentNodeId == path.size()) {
             action.setVelocity(0.0);
-            return;
+            return true;
         }
 
         boolean resetJump = false;
@@ -71,7 +74,7 @@ public class Mover {
 
             if (mCurrentNodeId == path.size()) {
                 action.setVelocity(0.0);
-                return;
+                return true;
             }
 
             target = path.get(mCurrentNodeId);
@@ -109,6 +112,7 @@ public class Mover {
         }
 
         action.setJumpDown(reachX && deltaY < 0);
+        return false;
     }
 
     private double getSpeed(double deltaY, Vector2i target, Unit unit) {
