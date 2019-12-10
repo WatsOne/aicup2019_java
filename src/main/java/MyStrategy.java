@@ -1,6 +1,7 @@
 import alg.AreaSearcher;
 import alg.LineTracer;
 import debug.Debug;
+import java.util.Collections;
 import java.util.List;
 import model.ColorFloat;
 import model.CustomData;
@@ -53,13 +54,21 @@ public class MyStrategy {
         return grid;
     }
 
-    private List<Vector2i> pathFind(Unit unit, Vector2i target) {
-        return pathFinder.find(new Vector2i((int) (unit.getPosition().getX() - 0.45), (int) unit.getPosition().getY()), target, 1, 1, (short) 5);
+    private List<Vector2i> pathFind(Unit unit, Vector2i target, Game game) {
+        Vector2i unitPos = new Vector2i((int) (unit.getPosition().getX() - 0.45), (int) unit.getPosition().getY());
+        List<Vector2i> path = pathFinder.find(unitPos, target, 1, 1, (short) 5);
+        if (path == null || path.isEmpty()) {
+            System.out.println(">>> to pad");
+            Vector2i padPos = getNearestPad(unit, game);
+            path = pathFinder.find(unitPos, padPos, 1, 1, (short) 5);
+        }
+
+        return path;
     }
 
     private void init(Unit unit, Game game, Debug debug) {
         pathFinder = new PathFinder(initGrid(game), game.getLevel());
-        currentPath = pathFind(unit, getNearestLoot(unit, game, Item.Weapon.class));
+        currentPath = pathFind(unit, getNearestLoot(unit, game, Item.Weapon.class), game);
         simulator = new Simulator(game);
         mover = new Mover(currentPath, game);
         areaSearcher.init(unit, game);
@@ -81,35 +90,41 @@ public class MyStrategy {
             state = State.WEAPON;
         }
 
-        if (game.getCurrentTick() > 0 && game.getCurrentTick() % 50 == 0 && state == State.MOVE) {
+        if (game.getCurrentTick() > 0 && game.getCurrentTick() % 70 == 0 && state == State.MOVE) {
             state = State.NOTHING;
         }
+
         updatePath(unit, game, enemy);
-
         UnitAction action = new UnitAction();
-
-        if (mover.move(unit, action)) {
+        if (unit.getJumpState().getMaxTime() > 0 && game.getLevel().isOnPad((int) unit.getPosition().getX(), (int) unit.getPosition().getY())) {
             state = State.NOTHING;
-            updatePath(unit, game, enemy);
             mover.move(unit, action);
-        }
+        } else {
+            if (mover.move(unit, action)) {
+                state = State.NOTHING;
+                updatePath(unit, game, enemy);
+                mover.move(unit, action);
+            }
 
-        if (action.isJump() && game.getCurrentTick() == 0) {
-            action.setVelocity(0.0);
-            skipJump = true;
-        }
+            if (action.isJump() && game.getCurrentTick() == 0) {
+                action.setVelocity(0.0);
+                skipJump = true;
+            }
 
-        if (skipJump) {
-            action.setVelocity(0.0);
-            action.setJump(false);
-            skipJump = false;
+            if (skipJump) {
+                action.setVelocity(0.0);
+                action.setJump(false);
+                skipJump = false;
+            }
         }
 
         Vec2Double aim = new Vec2Double(enemy.getPosition().getX() - unit.getPosition().getX(), enemy.getPosition().getY() - unit.getPosition().getY());
         action.setAim(aim);
 
-        for (Vector2i vec : currentPath) {
-            debug.draw(new CustomData.Rect(new Vec2Float((float) vec.getX(), (float) vec.getY()), new Vec2Float(1f, 1f), new ColorFloat(0f, 1f, 0f, 0.5f)));
+        if (currentPath != null) {
+            for (Vector2i vec : currentPath) {
+                debug.draw(new CustomData.Rect(new Vec2Float((float) vec.getX(), (float) vec.getY()), new Vec2Float(1f, 1f), new ColorFloat(0f, 1f, 0f, 0.5f)));
+            }
         }
 
         action.setShoot(iSeeEnemy(enemy, unit, game));
@@ -117,20 +132,28 @@ public class MyStrategy {
     }
 
     private void updatePath(Unit unit, Game game, Unit enemy) {
+        if (unit.getWeapon() == null && state != State.WEAPON) {
+            currentPath = pathFind(unit, getNearestLoot(unit, game, Item.Weapon.class), game);
+            mover = new Mover(currentPath, game);
+            state = State.WEAPON;
+            return;
+        }
+
         if (unit.getHealth() < 60 && state != State.HEALTH && healthExist) {
             state = State.HEALTH;
             Vector2i h = getNearestLoot(unit, game, Item.HealthPack.class);
             if (h != null) {
-                currentPath = pathFind(unit, h);
+                currentPath = pathFind(unit, h, game);
                 mover = new Mover(currentPath, game);
             } else {
                 state = State.NOTHING;
                 healthExist = false;
             }
+            return;
         }
 
         if (state != State.HEALTH && state != State.WEAPON && state != State.MOVE) {
-            currentPath = pathFind(unit, getNearestPosForShooting(game, enemy, areaSearcher));
+            currentPath = pathFind(unit, getNearestPosForShooting(game, enemy, areaSearcher), game);
             mover = new Mover(currentPath, game);
             state = State.MOVE;
         }
@@ -149,6 +172,21 @@ public class MyStrategy {
                     result = new Vector2i((int) weaponPos.getX(), (int) weaponPos.getY());
                     minDistance = distance;
                 }
+            }
+        }
+        return result;
+    }
+
+    private Vector2i getNearestPad(Unit unit, Game game) {
+        Vector2i result = null;
+        double minDistance = 9999;
+
+        for (Vector2i pos : game.getLevel().pads) {
+            Vec2Double unitPos = unit.getPosition();
+            double distance = Math.abs(unitPos.getX() - pos.getX()) + Math.abs(unitPos.getY() - pos.getY());
+            if (distance < minDistance) {
+                result = new Vector2i(pos.getX(), pos.getY() + 2);
+                minDistance = distance;
             }
         }
 

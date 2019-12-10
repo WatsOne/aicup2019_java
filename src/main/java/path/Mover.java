@@ -1,7 +1,6 @@
 package path;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import model.Game;
 import model.Unit;
@@ -23,21 +22,6 @@ public class Mover {
         mCurrentNodeId = 1;
         simulator = new Simulator(game);
         this.game = game;
-        filterPathForPads();
-    }
-
-    private void filterPathForPads() {
-        for (Vector2i p : path) {
-            if (game.getLevel().isLadderFake(p.getX() + 1, p.getY())) {
-                p.setX(p.getX() + 1);
-            }
-            if (game.getLevel().isLadderFake(p.getX() - 1, p.getY())) {
-                p.setX(p.getX() - 1);
-            }
-            if (game.getLevel().isPad(p.getX(), p.getY())) {
-                p.setY(p.getY() + 1);
-            }
-        }
     }
 
     public boolean move(Unit unit, UnitAction action) {
@@ -54,26 +38,6 @@ public class Mover {
         if (reached(unit)) {
             System.out.println(">>> reached !" + target.getX() + " :: " + target.getY());
 
-            Vector2i currentReached = path.get(mCurrentNodeId);
-            Vector2i prevReached = path.get(mCurrentNodeId - 1);
-            boolean onPlatform = game.getLevel().isPlatform(currentReached.getX(), currentReached.getY() - 1);
-
-            boolean onFakeLadder = game.getLevel().isLadderFake(currentReached.getX(), currentReached.getY());
-            boolean onFakeLadderPrev = game.getLevel().isLadderFake(prevReached.getX(), prevReached.getY());
-            boolean resetForPad = onFakeLadder && !onFakeLadderPrev;
-
-            if (onPlatform || resetForPad) {
-                resetJump = true;
-            }
-            if (resetForPad) {
-                if (game.getLevel().isPad(target.getX(), target.getY() - 1)) {
-                    path.add(mCurrentNodeId + 1, new Vector2i(target.getX(), target.getY()));
-                } else {
-                    path.add(mCurrentNodeId, new Vector2i(target.getX(), target.getY() - 1));
-                    path.add(mCurrentNodeId + 1, new Vector2i(target.getX(), target.getY()));
-                }
-            }
-
             mCurrentNodeId++;
             currentSpeed = null;
 
@@ -89,11 +53,11 @@ public class Mover {
         if (currentSpeed == null) {
             currentSpeed = getSpeed(deltaY, target, unit);
 
-            if (!reachYSim(unit) && deltaY > 0) {
+            if (!reachY(unit) && deltaY > 0) {
                 simulator.reset(unit);
                 action.setVelocity(currentSpeed);
                 int simTicks = 0;
-                while (!reachYSim(simulator.getSimPlayer()) && simTicks < 100) {
+                while (!reachY(simulator.getSimPlayer()) && simTicks < 100) {
                     double deltaSimY = target.getY() - simulator.getSimPlayer().getPosition().getY();
                     action.setJump(getJump(simulator.getSimPlayer(), deltaSimY));
                     simulator.tick(action, null, false);
@@ -109,13 +73,7 @@ public class Mover {
         boolean reachX = reachX(unit);
 
         action.setVelocity(reachX ? 0.0 : currentSpeed);
-
-        if (resetJump) {
-            action.setJump(false);
-        } else {
-            action.setJump(getJump(unit, deltaY));
-        }
-
+        action.setJump(getJump(unit, deltaY));
         action.setJumpDown(reachX && deltaY < 0);
 
         if (prevPos != null && Math.abs(prevPos.getX() - unit.getPosition().getX()) < 0.0000001 && Math.abs(prevPos.getY() - unit.getPosition().getY()) < 0.0000001) {
@@ -141,38 +99,17 @@ public class Mover {
     }
 
     private boolean getJump(Unit unit, double deltaY) {
-        return !reachYSim(unit) && deltaY > 0;
+        return !reachY(unit) && deltaY > 0;
     }
 
     private boolean reached(Unit unit) {
         Vector2i target = path.get(mCurrentNodeId);
         boolean reachX = Math.abs(unit.getPosition().getX() - 0.45 - target.getX()) < 0.1;
-
-        if (game.getLevel().isLadderFake(target.getX(), target.getY())) {
-            return reachX && reachYExtended(unit);
-        }
-
-        if (game.getLevel().isGround(target.getX(), target.getY()) && !game.getLevel().isLadder(target.getX(), target.getY())) {
-            return reachX && reachY(unit);
-        } else {
-            return reachX && reachYSim(unit);
-        }
+        return reachX && reachY(unit);
     }
-
     private boolean reachY(Unit unit) {
         Vector2i target = path.get(mCurrentNodeId);
-        double deltaY = unit.getPosition().getY() - target.getY();
-        return deltaY >= 0.0 && deltaY < 0.08;
-    }
-
-    private boolean reachYSim(Unit unit) {
-        Vector2i target = path.get(mCurrentNodeId);
         return Math.abs(unit.getPosition().getY() - target.getY()) < 0.1;
-    }
-
-    private boolean reachYExtended(Unit unit) {
-        Vector2i target = path.get(mCurrentNodeId);
-        return Math.abs(unit.getPosition().getY() - target.getY()) < 0.2;
     }
 
     private boolean reachX(Unit unit) {

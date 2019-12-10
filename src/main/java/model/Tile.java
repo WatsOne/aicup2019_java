@@ -8,7 +8,7 @@ public enum Tile {
     PLATFORM(2),
     LADDER(3),
     JUMP_PAD(4),
-    LADDER_FAKE(99);
+    ON_PAD(99);
     public int discriminant;
     Tile(int discriminant) {
       this.discriminant = discriminant;

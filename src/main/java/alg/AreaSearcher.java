@@ -31,22 +31,22 @@ public class AreaSearcher {
         while (!q.isEmpty()) {
             Vector2i current = q.poll();
             Vector2i up = new Vector2i(current.getX(), current.getY() + 1);
-            if (tiles[up.getX()][up.getY()] != Tile.WALL && !visited.contains(up)) {
+            if (tiles[up.getX()][up.getY()] != Tile.WALL && tiles[up.getX()][up.getY()] != Tile.ON_PAD && !visited.contains(up)) {
                 q.add(up);
                 visited.add(up);
             }
             Vector2i down = new Vector2i(current.getX(), current.getY() - 1);
-            if (tiles[down.getX()][down.getY()] != Tile.WALL && !visited.contains(down)) {
+            if (tiles[down.getX()][down.getY()] != Tile.WALL && tiles[up.getX()][up.getY()] != Tile.ON_PAD && !visited.contains(down)) {
                 q.add(down);
                 visited.add(down);
             }
             Vector2i right = new Vector2i(current.getX() - 1, current.getY());
-            if (tiles[right.getX()][right.getY()] != Tile.WALL && !visited.contains(right)) {
+            if (tiles[right.getX()][right.getY()] != Tile.WALL && tiles[up.getX()][up.getY()] != Tile.ON_PAD && !visited.contains(right)) {
                 q.add(right);
                 visited.add(right);
             }
             Vector2i left = new Vector2i(current.getX() + 1, current.getY());
-            if (tiles[left.getX()][left.getY()] != Tile.WALL && !visited.contains(left)) {
+            if (tiles[left.getX()][left.getY()] != Tile.WALL && tiles[up.getX()][up.getY()] != Tile.ON_PAD && !visited.contains(left)) {
                 q.add(left);
                 visited.add(left);
             }

@@ -44,10 +44,10 @@ public class Level {
         }
 
         result.pads.forEach(p -> {
-            int i = 1;
+            int i = 0;
             boolean wall = false;
-            while (!wall && i <= 10) {
-                result.tiles[p.getX()][p.getY() + i] = Tile.LADDER_FAKE;
+            while (!wall && i <= 11) {
+                result.tiles[p.getX()][p.getY() + i] = Tile.ON_PAD;
                 i++;
                 if (result.tiles[p.getX()][p.getY() + i] == Tile.WALL) {
                     wall = true;
@@ -68,7 +68,7 @@ public class Level {
     }
 
     public boolean isGround(int x, int y) {
-        return tiles[x][y] == Tile.WALL || tiles[x][y] == Tile.PLATFORM || tiles[x][y] == Tile.LADDER || tiles[x][y] == Tile.LADDER_FAKE;
+        return tiles[x][y] == Tile.WALL || tiles[x][y] == Tile.PLATFORM || tiles[x][y] == Tile.LADDER ;
     }
 
     public boolean isPlatform(int x, int y) {
@@ -80,10 +80,10 @@ public class Level {
     }
 
     public boolean isLadder(int x, int y) {
-        return tiles[x][y] == Tile.LADDER || tiles[x][y] == Tile.LADDER_FAKE;
+        return tiles[x][y] == Tile.LADDER;
     }
 
-    public boolean isLadderFake(int x, int y) {
-        return tiles[x][y] == Tile.LADDER_FAKE;
+    public boolean isOnPad(int x, int y) {
+        return tiles[x][y] == Tile.ON_PAD;
     }
 }
