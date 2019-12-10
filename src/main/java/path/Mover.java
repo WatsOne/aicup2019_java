@@ -15,6 +15,7 @@ public class Mover {
     private Simulator simulator;
     private Game game;
     private Vec2Double prevPos;
+    private int stuckCount = 0;
 
     public Mover(List<Vector2i> path, Game game) {
         this.path = path;
@@ -118,8 +119,13 @@ public class Mover {
         action.setJumpDown(reachX && deltaY < 0);
 
         if (prevPos != null && Math.abs(prevPos.getX() - unit.getPosition().getX()) < 0.0000001 && Math.abs(prevPos.getY() - unit.getPosition().getY()) < 0.0000001) {
-            System.out.println(">>>> STUCK");
+            stuckCount++;
+        }
+        if (stuckCount == 6) {
             action.setVelocity(5.4);
+            action.setJump(true);
+            action.setJumpDown(false);
+            stuckCount = 0;
         }
         prevPos = unit.getPosition();
         return false;
