@@ -6,6 +6,7 @@ import java.util.List;
 import model.Game;
 import model.Unit;
 import model.UnitAction;
+import model.Vec2Double;
 
 public class Mover {
     private List<Vector2i> path;
@@ -13,6 +14,7 @@ public class Mover {
     private Double currentSpeed;
     private Simulator simulator;
     private Game game;
+    private Vec2Double prevPos;
 
     public Mover(List<Vector2i> path, Game game) {
         this.path = path;
@@ -49,6 +51,8 @@ public class Mover {
         double deltaY = target.getY() - unit.getPosition().getY();
 
         if (reached(unit)) {
+            System.out.println(">>> reached !" + target.getX() + " :: " + target.getY());
+
             Vector2i currentReached = path.get(mCurrentNodeId);
             Vector2i prevReached = path.get(mCurrentNodeId - 1);
             boolean onPlatform = game.getLevel().isPlatform(currentReached.getX(), currentReached.getY() - 1);
@@ -112,6 +116,12 @@ public class Mover {
         }
 
         action.setJumpDown(reachX && deltaY < 0);
+
+        if (prevPos != null && Math.abs(prevPos.getX() - unit.getPosition().getX()) < 0.0000001 && Math.abs(prevPos.getY() - unit.getPosition().getY()) < 0.0000001) {
+            System.out.println(">>>> STUCK");
+            action.setVelocity(5.4);
+        }
+        prevPos = unit.getPosition();
         return false;
     }
 
@@ -136,7 +146,7 @@ public class Mover {
             return reachX && reachYExtended(unit);
         }
 
-        if (game.getLevel().isGround(target.getX(), target.getY())) {
+        if (game.getLevel().isGround(target.getX(), target.getY()) && !game.getLevel().isLadder(target.getX(), target.getY())) {
             return reachX && reachY(unit);
         } else {
             return reachX && reachYSim(unit);

@@ -29,8 +29,7 @@ public class Runner {
     }
 
     private void run() throws IOException {
-//        MyStrategy myStrategy = new MyStrategy();
-        TestStrategy myStrategy = new TestStrategy();
+        MyStrategy myStrategy = new MyStrategy();
         Debug debug = new Debug(outputStream);
         while (true) {
             model.ServerMessageGame message = model.ServerMessageGame.readFrom(inputStream);
