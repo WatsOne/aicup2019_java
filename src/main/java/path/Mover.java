@@ -36,7 +36,7 @@ public class Mover {
         double deltaY = target.getY() - unit.getPosition().getY();
 
         if (reached(unit)) {
-            System.out.println(">>> reached !" + target.getX() + " :: " + target.getY());
+//            System.out.println(">>> reached !" + target.getX() + " :: " + target.getY());
 
             mCurrentNodeId++;
             currentSpeed = null;

@@ -3,7 +3,7 @@ package model;
 import util.StreamUtil;
 
 public class Weapon {
-    private model.WeaponType typ;
+    public model.WeaponType typ;
     public model.WeaponType getTyp() { return typ; }
     public void setTyp(model.WeaponType typ) { this.typ = typ; }
     private model.WeaponParams params;

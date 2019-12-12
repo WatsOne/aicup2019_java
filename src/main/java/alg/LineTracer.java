@@ -2,10 +2,11 @@ package alg;
 
 import model.Game;
 import model.Tile;
+import path.Vector2i;
 
 public class LineTracer {
     //Алгоритм Брезенхэма
-    public static boolean canTrace(Game game, int x1, int y1, int x2, int y2) {
+    public static Vector2i canTrace(Game game, int x1, int y1, int x2, int y2) {
         Tile[][] tiles = game.getLevel().getTiles();
 
         int d = 0;
@@ -21,7 +22,7 @@ public class LineTracer {
         if (dy <= dx) {
             while (true) {
                 if (tiles[xx][yy] == Tile.WALL) {
-                    return false;
+                    return new Vector2i(xx, yy);
                 }
                 if (xx == x2) {
                     break;
@@ -37,7 +38,7 @@ public class LineTracer {
         else {
             while (true) {
                 if (tiles[xx][yy] == Tile.WALL) {
-                    return false;
+                    return new Vector2i(xx, yy);
                 }
                 if (yy == y2) {
                     break;
@@ -51,6 +52,6 @@ public class LineTracer {
             }
         }
 
-        return true;
+        return null;
     }
 }
